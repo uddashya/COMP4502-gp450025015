@@ -1,1 +1,0 @@
-selected_data <- read_excel("FYP data/log_level data/agghkd_log_level_clean.xlsx")
