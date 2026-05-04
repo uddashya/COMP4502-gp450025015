@@ -1,6 +1,6 @@
-# COMP4502-gp450025015
+# COMP4501-gp450025015
 
-# Hong Kong Inflation Hedging Analysis - Empirical Codebase
+# Data-Driven Identification of Optimal Inflation Hedging Assets in Hong Kong - Codebase
 
 ## Overview
 This repository contains the R Markdown (`.Rmd`) files used to generate the empirical results for the research project assessing the long-run inflation-hedging capabilities of ten distinct asset classes in Hong Kong. 
