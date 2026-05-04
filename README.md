@@ -1,72 +1,169 @@
 # COMP4501-gp450025015
 
-# Data-Driven Identification of Optimal Inflation Hedging Assets in Hong Kong - Codebase
+## Data-Driven Identification of Optimal Inflation Hedging Assets in Hong Kong
 
-## Overview
-This repository contains the R Markdown (`.Rmd`) files used to generate the empirical results for the research project assessing the long-run inflation-hedging capabilities of ten distinct asset classes in Hong Kong. 
+This repository contains the code and supporting datasets for a research project on the inflation-hedging properties of major asset classes in Hong Kong.
 
-The econometric methodology relies on the Autoregressive Distributed Lag (ARDL) bounds testing approach, the Error Correction Model (ECM), and the Fisher Hypothesis. This repository provides complete transparency into the data processing, model selection, and diagnostic testing for each asset.
+The repository is intentionally organized around two working areas:
 
-## Asset Universe
-The analysis is applied individually across ten assets, converted to HKD where applicable. Each asset has its own dedicated `.Rmd` script to ensure clean processing and isolated environment variables. The assets evaluated include:
-* **Equities:** Hang Seng Index (HSI), S&P 500 (SNP), NASDAQ Composite
-* **Commodities:** WTI Crude Oil (WTI/HKD), Spot Gold (XAU/HKD)
-* **Forex:** JPY/HKD, CHF/HKD
-* **Fixed Income/Credit:** Bloomberg Global Aggregate Credit Index (Agg), HK 10-Year Government Bond
-* **Real Estate:** Hang Seng Properties Index (HSP)
+- `ARDL/`: final econometric work in R Markdown for the asset-level ARDL, ECM, and Fisher Hypothesis analysis
+- `EDA/`: exploratory Python notebooks and local supporting data used for inspection, cleaning, and early-stage analysis
 
-## Prerequisites & R Packages
-To replicate the HTML outputs or run the `.Rmd` files locally, the following R packages are required:
-* `tidyverse` (For data manipulation and transformation)
-* `readxl` (For importing raw Excel datasets)
-* `tseries` (For Augmented Dickey-Fuller Unit Root testing)
-* `strucchange` (For Bai-Perron structural break detection)
-* `ARDL` (For ARDL model estimation, optimal lag selection, and bounds testing)
-* `car` (For Wald tests and linear hypothesis testing)
+## Repository Policy
 
-## Code Structure and Processing Pipeline
-Each R Markdown file follows a strict, sequential pipeline to ensure statistical validity. Below is the documentation of how the data is processed in each script:
+The `ARDL/` directory is treated as a stable analysis area. Its internal file and data layout is preserved to avoid breaking existing R Markdown scripts that rely on the current relative paths.
+
+This means the repository does not yet follow a fully normalized `analysis/` and `data/` structure. That is a deliberate tradeoff to protect reproducibility of the existing final analysis code without editing the scripts themselves.
+
+## Current Structure
+
+```text
+.
+├── ARDL/
+│   ├── *.Rmd
+│   ├── README.md
+│   └── FYP data/
+│       ├── raw price data/
+│       └── log_level data/
+├── EDA/
+│   ├── *.ipynb
+│   ├── *.csv
+│   └── README.md
+└── docs/
+    └── repo-structure.md
+```
+
+## Research Scope
+
+The asset universe includes:
+
+- Equities: Hang Seng Index, S&P 500, NASDAQ Composite
+- Commodities: WTI Crude Oil, Spot Gold
+- Foreign Exchange: JPY/HKD, CHF/HKD
+- Fixed Income and Credit: Bloomberg Global Aggregate, HK 10-Year Government Bond
+- Real Estate: Hang Seng Properties Index
+
+## Econometric Methodology
+
+The final R Markdown files in `ARDL/` implement a consistent asset-by-asset econometric pipeline designed to test long-run inflation-hedging behavior in Hong Kong.
+
+The workflow combines:
+
+- ARDL bounds testing for cointegration
+- unrestricted and restricted ECM estimation
+- long-run coefficient interpretation
+- Fisher Hypothesis testing
+- standard post-estimation diagnostics
+
+## ARDL Pipeline
+
+Each R Markdown file follows a strict sequential pipeline to preserve statistical validity and make the outputs comparable across assets.
 
 ### Step 1: Data Initialization
-The scripts begin by importing the raw time-series data using `read_excel()` and omitting any missing values (`na.omit()`). The dataset includes the timestamp, the natural logarithm of the asset price (`log_price`), and the natural logarithm of the Hong Kong Consumer Price Index (`cpi_month`).
 
-### Step 2: Stationarity Checks (ADF Test)
-The ARDL framework requires that no variables be integrated of order 2, I(2). 
-* A custom function, `test_stationarity()`, is defined to execute the Augmented Dickey-Fuller (`adf.test()`) on both the levels and first differences of the asset and CPI data. 
-* This confirms that all variables are either I(0) or I(1) before proceeding.
+Each script imports the relevant processed dataset with `read_excel()` and removes missing observations using `na.omit()`.
+
+The working dataset typically contains:
+
+- a timestamp or date column
+- `log_price`, the natural logarithm of the asset price
+- `cpi_month`, the natural logarithm of the Hong Kong CPI series
+
+### Step 2: Stationarity Checks
+
+The ARDL framework requires that no variable be integrated of order 2.
+
+Each script defines a helper such as `test_stationarity()` to run the Augmented Dickey-Fuller test with `adf.test()` on:
+
+- the level series
+- the first-differenced series
+
+This is used to confirm that the variables are admissible for ARDL estimation and are I(0) or I(1), not I(2).
 
 ### Step 3: Structural Break Identification
-To prevent false negatives in cointegration testing caused by major macroeconomic regime shifts:
-* The Bai-Perron procedure is executed via the `breakpoints()` function to endogenously detect structural breaks in the long-run relationship.
-* The script extracts the optimal break dates and generates deterministic dummy variables (`regime_2`, `regime_3`, etc.) to isolate and control for these specific market regimes in the final model.
+
+To reduce the risk of misleading cointegration results under regime change, the scripts estimate structural breaks using the Bai-Perron procedure through `breakpoints()`.
+
+The resulting break dates are used to construct deterministic regime dummy variables such as:
+
+- `regime_2`
+- `regime_3`
+- `regime_4`
+
+These dummies are then included in the model specification to control for shifts in the long-run relationship.
 
 ### Step 4: Lag Selection and ARDL Specification
-The core ARDL model is formulated.
-* The script determines the optimal lag length using `auto_ardl()`, allowing for a maximum of 12 lags.
-* The Akaike Information Criterion (AIC) is used to select the best-fitting model, ensuring a balance between model fit and parsimony.
-* The `ardl()` function is then used to fit the model using the optimal lags and the previously generated structural break dummy variables.
 
-### Step 5: ARDL Bounds Testing for Cointegration
-To establish whether a long-run equilibrium exists:
-* The `bounds_f_test()` function is executed on the fitted ARDL model. 
-* The script specifies `case = 3` (unrestricted intercept, no deterministic time trend) to calculate the F-statistic. An F-statistic exceeding the upper critical bound (5.73 at the 5% level) confirms cointegration.
+The core ARDL model is selected using `auto_ardl()` with a maximum lag search, typically up to 12 lags.
 
-### Step 6: Long-Run Coefficients & The Fisher Hypothesis
-Once cointegration is confirmed, the script evaluates the hedging efficacy:
-* The `multipliers()` function extracts the long-run coefficient (Beta) representing the elasticity between the asset and CPI.
-* The model is transformed into an Unrestricted Error Correction Model using `uecm()`.
-* A Wald Test is performed via the `linearHypothesis()` function to test the strict Fisher Hypothesis (testing if the coefficient equals 1 by setting `L(cpi_month, 1) + L(log_price, 1) = 0`).
+The selection criterion is AIC, which is used to balance fit and parsimony. The chosen lag orders are then passed to `ardl()` together with the CPI regressor and the structural break dummy variables.
 
-### Step 7: Short-Run Dynamics (Error Correction Model)
-The script estimates the Restricted Error Correction Model to analyze short-term deviations:
-* The `recm()` function is utilized to extract the short-run dynamics.
-* The focus is on the Error Correction Term (`ect`), which represents the speed of adjustment back to the long-run equilibrium. A negative, statistically significant `ect` confirms the validity of the cointegrating relationship.
+### Step 5: Bounds Testing for Cointegration
+
+After the ARDL model is fitted, `bounds_f_test()` is used to test for a long-run equilibrium relationship.
+
+The scripts use `case = 3`, corresponding to an unrestricted intercept with no deterministic trend. If the F-statistic exceeds the relevant upper critical bound, the asset is treated as cointegrated with CPI.
+
+### Step 6: Long-Run Coefficients and Fisher Hypothesis
+
+When cointegration is established, the scripts extract long-run elasticities using `multipliers()`.
+
+They then transform the model into an unrestricted ECM with `uecm()` and apply `linearHypothesis()` to test the Fisher Hypothesis restriction on the long-run CPI coefficient.
+
+This stage addresses two questions:
+
+- whether the long-run hedge coefficient is statistically different from zero
+- whether it is statistically consistent with a one-for-one inflation hedge
+
+### Step 7: Short-Run Dynamics
+
+The short-run adjustment process is examined through the restricted ECM produced by `recm()`.
+
+The main quantity of interest is the error-correction term, which measures the speed at which deviations from the long-run equilibrium are corrected. A negative and statistically significant adjustment term supports the validity of the cointegrating relationship.
 
 ### Step 8: Diagnostic Testing
-Finally, standard OLS diagnostic tests are run on the ECM residuals to ensure econometric robustness:
-* **Breusch-Godfrey Test (`bgtest`):** Confirms the absence of serial correlation (a critical assumption for ARDL validity).
-* **Breusch-Pagan Test (`bptest`):** Tests for heteroskedasticity.
-* **Jarque-Bera Test (`jarque.bera.test`):** Evaluates residual normality. 
 
-## Usage
-To reproduce the findings, clone this repository, open the desired asset's `.Rmd` file in RStudio, and click **Knit -> Knit to HTML** to execute the pipeline and view the formatted results.
+The final step checks whether the ECM residuals satisfy standard assumptions used to assess econometric robustness.
+
+The scripts run:
+
+- `lmtest::bgtest()` for serial correlation
+- `lmtest::bptest()` for heteroskedasticity
+- `tseries::jarque.bera.test()` for residual normality
+
+Together, these diagnostics provide a basic model adequacy check for each asset-level specification.
+
+## Reproducing the ARDL Analysis
+
+Open the required file in `ARDL/` with RStudio and knit the `.Rmd` document.
+
+Required R packages include:
+
+- `tidyverse`
+- `readxl`
+- `tseries`
+- `strucchange`
+- `ARDL`
+- `car`
+- `lmtest`
+
+## Reproducing the EDA Notebooks
+
+The notebooks in `EDA/` are exploratory and may depend on a local Python environment with packages such as:
+
+- `pandas`
+- `numpy`
+- `matplotlib`
+- `seaborn`
+- `plotly`
+- `scipy`
+- `statsmodels`
+- `ruptures`
+
+These notebooks are not currently standardized into a locked Python environment.
+
+## Professionalization Status
+
+This repository has been cleaned up at the documentation and project-hygiene level without changing analysis code. The main remaining technical debt is path-coupled code inside the ARDL scripts. That has been intentionally left unchanged to reduce risk.
+
+See [docs/repo-structure.md](/Users/uddashyakumar/Desktop/COMP4501-gp450025015/docs/repo-structure.md) for the detailed structure rationale.

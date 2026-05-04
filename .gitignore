@@ -1,0 +1,29 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+
+# R
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+
+# Rendered outputs and temporary files
+*.html
+*.pdf
+*.docx
+*.log
+*.tmp
+*.bak

@@ -18,7 +18,7 @@ library(readxl)
 
 ```{r}
 library(readxl)
-selected_data <- read_excel("C:\\Users\\USER\\Downloads\\FYP data\\log_level data\\wtihkd_log_level_clean.xlsx")
+selected_data <- read_excel("FYP data\\log_level data\\wtihkd_log_level_clean.xlsx")
 
 ```
 
