@@ -37,11 +37,11 @@ This means the repository does not yet follow a fully normalized `analysis/` and
 
 The asset universe includes:
 
-- Equities: Hang Seng Index, S&P 500, NASDAQ Composite
+- Equities: Hang Seng Index (HSI), S&P 500, NASDAQ Composite (QQQ)
 - Commodities: WTI Crude Oil, Spot Gold
 - Foreign Exchange: JPY/HKD, CHF/HKD
 - Fixed Income and Credit: Bloomberg Global Aggregate, HK 10-Year Government Bond
-- Real Estate: Hang Seng Properties Index
+- Real Estate: Hang Seng Properties Index (HSP)
 
 ## Econometric Methodology
 
